@@ -20,6 +20,7 @@ import (
 func SignUp(c *gin.Context) {
 	var user model.User;
 
+
 	if err:= c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest,gin.H{
 			"status":"error",

@@ -12,10 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func AddTodo(c *gin.Context) {
 	var todo model.Todo
+
+
+	userId,_:= primitive.ObjectIDFromHex(c.GetString("id"))
 
 	if err := c.ShouldBindJSON(&todo); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -26,6 +30,7 @@ func AddTodo(c *gin.Context) {
 	}
 
 	todo.CreatedAt = time.Now()
+	todo.UserId = userId
 
 	result, err := database.Client.Database("todoapp").Collection("todos").InsertOne(context.Background(), todo)
 	if err != nil {
@@ -41,11 +46,13 @@ func AddTodo(c *gin.Context) {
 }
 
 func GetTodos(c *gin.Context) {
-	// sort:= bson.D{{"createdat",-1}}
-	// opt:=options.Find().SetSort(sort)
-	filter:= bson.D{}
+	sort:= bson.D{{"createdat",-1}}
+	opt:= options.Find().SetSort(sort)
+	userId,_:= primitive.ObjectIDFromHex(c.GetString("id"))
 
-	cursor,err := database.Client.Database("todoapp").Collection("todos").Find(context.Background(),filter)
+	filter:= bson.D{{"userId",userId}}
+
+	cursor,err := database.Client.Database("todoapp").Collection("todos").Find(context.Background(),filter,opt)
 
 	fmt.Println(cursor.Current)
 	if err != nil {

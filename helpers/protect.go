@@ -40,7 +40,7 @@ func Protect(c *gin.Context) {
 		return
 	}
 
-	c.Set("id",userId)
+	c.Set("id",user.Id)
 
 	c.Next()
 }

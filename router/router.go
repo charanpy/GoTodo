@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/charanpy/todoapi/controller"
+	"github.com/charanpy/todoapi/helpers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,8 +24,8 @@ func SetRoutes() *gin.Engine {
 
 	app:=r.Group("/api/v1/") 
 	{
-		app.POST("/todo", controller.AddTodo)
-		app.GET("/todo", controller.GetTodos)
+		app.POST("/todo",helpers.Protect,controller.AddTodo)
+		app.GET("/todo",helpers.Protect, controller.GetTodos)
 		app.POST("/register",controller.SignUp)
 		app.POST("/login",controller.Login)
 	}
