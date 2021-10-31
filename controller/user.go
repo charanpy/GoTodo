@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -22,10 +21,8 @@ func SignUp(c *gin.Context) {
 
 
 	if err:= c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest,gin.H{
-			"status":"error",
-			"message":err.Error(),
-		})
+		helpers.AppError(c,err.Error(),400)
+	
 		return;
 	}
 
@@ -35,20 +32,14 @@ func SignUp(c *gin.Context) {
 	user.Password,err = helpers.HashPassword(user.Password);
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError,gin.H{
-				"status":"error",
-			"message": "Something went wrong",
-		})
+		helpers.AppError(c,"Something went wrong",500)
 		return
 	}
 
 	res,err:= database.Client.Database("todoapp").Collection("users").InsertOne(context.Background(),user)
 
 	if err!=nil {
-		c.JSON(http.StatusInternalServerError,gin.H{
-				"status":"error",
-			"message": "Something went wrong",
-		})
+		helpers.AppError(c,"Something went wrong",500)
 		return;
 	}
 
@@ -69,10 +60,8 @@ func Login(c *gin.Context) {
 	var user model.User;
 
 	if err:=c.ShouldBindJSON(&user);err!=nil {
-		c.JSON(http.StatusInternalServerError,gin.H{
-			"status":"error",
-			"message":err.Error(),
-		})
+				helpers.AppError(c,err.Error(),400)
+
 	}
 
 	// check user 
@@ -82,42 +71,29 @@ func Login(c *gin.Context) {
 	err:=database.Client.Database("todoapp").Collection("users").FindOne(context.Background(),filter).Decode(&isUser)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest,gin.H{
-			"status":"error",
-			"message":"Invalid credentials",
-		})
+		helpers.AppError(c,"Invalid credentials",400)
 		return
 	}
 
 	// check password
 
 	if err != nil {
-			c.JSON(http.StatusInternalServerError,gin.H{
-			"status":"error",
-			"message":"Something went wrong",
-		})
+		helpers.AppError(c,"Something went wrong",500)
 		return
 	}
 
 	isValidPassword:= helpers.ComparePassword(isUser.Password,user.Password)
 
 	if !isValidPassword {
-		c.JSON(http.StatusBadRequest,gin.H{
-			"status":"error",
-			"message":"Invalid credentials",
-		})
+		helpers.AppError(c,"Invalid Credentials",400)
 		return
 	}
 
-	fmt.Println(isUser.ID, isUser.ID.Hex())
 
 	token,err:= helpers.GenerateToken(isUser.ID.Hex(),os.Getenv("SECRET"))
 
 	if err != nil {
-			c.JSON(http.StatusInternalServerError,gin.H{
-			"status":"error",
-			"message":"Something went wrong",
-		})
+		helpers.AppError(c,"Something went wrong",500)
 		return
 	}
 

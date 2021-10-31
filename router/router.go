@@ -26,9 +26,18 @@ func SetRoutes() *gin.Engine {
 	{
 		app.POST("/todo",helpers.Protect,controller.AddTodo)
 		app.GET("/todo",helpers.Protect, controller.GetTodos)
+		app.DELETE("/todo/:todoId",helpers.Protect,controller.DeleteTodo)
 		app.POST("/register",controller.SignUp)
 		app.POST("/login",controller.Login)
+		
 	}
+
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(404,gin.H{
+			"status":"error",
+			"message":"Not Found",
+		})
+	})
 
 	return r
 }

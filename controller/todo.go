@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/charanpy/todoapi/database"
+	"github.com/charanpy/todoapi/helpers"
 	"github.com/charanpy/todoapi/model"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,10 +23,7 @@ func AddTodo(c *gin.Context) {
 	userId,_:= primitive.ObjectIDFromHex(c.GetString("id"))
 
 	if err := c.ShouldBindJSON(&todo); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": "error",
-			"error":  err.Error(),
-		})
+		helpers.AppError(c,err.Error(),400)
 		return
 	}
 
@@ -56,7 +54,8 @@ func GetTodos(c *gin.Context) {
 
 	fmt.Println(cursor.Current)
 	if err != nil {
-		log.Fatal(err)
+		helpers.AppError(c,"No Todo Found",404)
+		return
 	}
 
 	var todos []primitive.M;
@@ -76,5 +75,24 @@ func GetTodos(c *gin.Context) {
 	c.JSON(http.StatusOK,gin.H{
 		"message":"success",
 		"todos": todos,
+	})
+}
+
+
+func DeleteTodo(c* gin.Context) {
+	todoId,_:=primitive.ObjectIDFromHex(c.Param("todoId"))
+	userId,_:=primitive.ObjectIDFromHex(c.GetString("id"))
+
+	filter:=bson.D{{"_id",todoId},{"userId",userId}}
+
+	result,err:= database.Client.Database("todoapp").Collection("todos").DeleteOne(context.Background(),filter)
+
+	if err!=nil || result.DeletedCount == 0 {
+		helpers.AppError(c,"Todo not found",401)
+		return;
+	}
+
+	c.JSON(http.StatusOK,gin.H{
+		"status":"success",
 	})
 }
