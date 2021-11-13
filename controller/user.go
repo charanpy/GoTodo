@@ -103,3 +103,22 @@ func Login(c *gin.Context) {
 		"token":token,
 	})
 }
+
+func GetMe(c *gin.Context) {
+	userId,_:=primitive.ObjectIDFromHex(c.GetString("id"))
+
+	var user model.User;
+
+	filter:=bson.D{{"_id",userId}}
+	err:= database.Client.Database("todoapp").Collection("users").FindOne(context.Background(),filter).Decode(&user)
+
+	if err != nil {
+		helpers.AppError(c,"Unauthorized",401)
+		return
+	}
+
+	c.JSON(http.StatusOK,gin.H{
+		"message":"success",
+		"user":user,
+	})
+}
